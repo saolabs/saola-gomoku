@@ -33,7 +33,7 @@ Browser checks exercise the compiled `.sao` output, not a mock interface: two-pl
 
 The engine regression suite includes an independent numeric referee, endpoint/longer-run cases, bot tactical positions, complete seeded games and independent UCT checks. Test execution budgets differ from the original Jest runner; assertions and game source stay identical.
 
-The first GitHub deployment run exceeded its 30-minute job budget in the exhaustive matrices. Its 30×30/N=5 match completed in about 484 seconds, exceeding the initial 300-second per-test limit. Deployment now runs the remaining regression suites and browser checks; the full matrices have a separate manually triggered workflow with a larger budget. The local engine verification covered all 245 upstream cases, including rerunning the timed match successfully, and 12 additional adapter cases. No test assertions were removed or weakened.
+CI runs the rules, tactical, UCT, Swap2, adapter and browser checks. The exhaustive matrices have a separate manually triggered workflow with a larger CPU budget. The local engine verification covered all 245 upstream cases, including rerunning a timed match successfully, and 12 additional adapter cases. No test assertions were removed or weakened. The application runs locally; no hosting or publication is configured.
 
 ## Limits
 

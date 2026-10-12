@@ -1,0 +1,35 @@
+name: Check Saola Gomoku
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          tools: composer:v2
+      - run: composer install --no-interaction --no-progress
+      - run: npm ci
+      - run: npm run test:smoke
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ui

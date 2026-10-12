@@ -56,6 +56,7 @@ try {
   assert.equal(await page.locator('#board .win').count(), 4);
   assert.equal(await page.locator('#board button:not([disabled])').count(), 0);
   await page.locator('#reset').click();
+  await page.waitForFunction(() => document.querySelectorAll('#board .x, #board .o').length === 0);
   assert.equal(await page.locator('#board .x, #board .o').count(), 0);
 
   await options({ gameMode: 'twoPlayer', size: '2', target: '5', opening: 'swap2' });
@@ -65,6 +66,7 @@ try {
   assert.equal(await page.getByRole('button', { name: 'Đặt thêm 2 quân' }).count(), 0);
   await page.getByRole('button', { name: 'Chọn Xanh · O' }).click();
   await cell('7:9').click();
+  await page.waitForFunction(() => document.querySelector('[data-coord="7:9"]')?.textContent.trim().toLowerCase() === 'o');
   assert.equal((await cell('7:9').innerText()).toLowerCase(), 'o');
 
   await options({ gameMode: 'ai', size: '0', target: '4', opening: 'standard', computerModel: 'UCT_Independent' });
