@@ -1,0 +1,9 @@
+{
+  "name": "saolabs/saola-gomoku",
+  "description": "Saola Gomoku: Caro built with .sao components and the my-connect-five engine",
+  "type": "project",
+  "require": {
+    "php": "^8.3",
+    "saola/compiler": "1.0.2"
+  }
+}

@@ -1,0 +1,9 @@
+/node_modules
+/vendor
+.generated/
+dist/
+test-results/
+*.log
+.DS_Store
+.codebase-memory/
+.codegraph/

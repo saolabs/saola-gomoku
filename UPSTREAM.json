@@ -1,0 +1,117 @@
+{
+  "project": "my-connect-five",
+  "source": "../../my-connect-five",
+  "imported": "2026-10-12",
+  "files": [
+    {
+      "source": "src/core/AIContainer.js",
+      "target": "resources/saola/web/app/game/core/AIContainer.js",
+      "sha256": "02cdc88c7143896e56101571110858f9c40a39e7efe6da2f8893fadbfbeb0c57"
+    },
+    {
+      "source": "src/core/BlockedEnds.test.js",
+      "target": "resources/saola/web/app/game/core/BlockedEnds.test.js",
+      "sha256": "e4ba70891c2c95da1bc1eef57a799509bb4f9dd1444da11acea8c7224633cdb0"
+    },
+    {
+      "source": "src/core/Caro.js",
+      "target": "resources/saola/web/app/game/core/Caro.js",
+      "sha256": "8e20ef76075e144f9a29904b51d95a124445e74074a19f2e1a003988013c0d3c"
+    },
+    {
+      "source": "src/core/Caro.test.js",
+      "target": "resources/saola/web/app/game/core/Caro.test.js",
+      "sha256": "5f4c94738f4d80d88cb193ee6eab620b671f647aa8ab7a563b709ee200cd45a5"
+    },
+    {
+      "source": "src/core/CorrectFiveGame.js",
+      "target": "resources/saola/web/app/game/core/CorrectFiveGame.js",
+      "sha256": "fd9e55eea467320821685abbd700709058d3bffe54441e8c494fe254af44d230"
+    },
+    {
+      "source": "src/core/CorrectFiveGame.test.js",
+      "target": "resources/saola/web/app/game/core/CorrectFiveGame.test.js",
+      "sha256": "7421b668c193e936498b6007696ebc99e1773ed78fcd14f26f8d995f63bed4e1"
+    },
+    {
+      "source": "src/core/CustomGame.test.js",
+      "target": "resources/saola/web/app/game/core/CustomGame.test.js",
+      "sha256": "80fe5e3a20317ba067674d9a7b26cad7cc36a5d674b60f603c8d8d52c2462770"
+    },
+    {
+      "source": "src/core/FullGameOracle.test.js",
+      "target": "resources/saola/web/app/game/core/FullGameOracle.test.js",
+      "sha256": "799c2a1bde1c27a68425ba86253c17d1247f10662d5c35b740dba8739696e863"
+    },
+    {
+      "source": "src/core/GomokuStrategy.js",
+      "target": "resources/saola/web/app/game/core/GomokuStrategy.js",
+      "sha256": "6999098f7db3a7423ee135885e2f77c8898d2c5c2a577ce364b8bd4251364c17"
+    },
+    {
+      "source": "src/core/LS.js",
+      "target": "resources/saola/web/app/game/core/LS.js",
+      "sha256": "0e42eea47b6a261e1bd92cfaa942103ee59d11546e2896724785a06a4ebf9ef4"
+    },
+    {
+      "source": "src/core/Swap2.test.js",
+      "target": "resources/saola/web/app/game/core/Swap2.test.js",
+      "sha256": "b80d529e9402a21b5b98f56236c118b370b4356389c0b6c8d0f52413d8b11e29"
+    },
+    {
+      "source": "src/core/utils.js",
+      "target": "resources/saola/web/app/game/core/utils.js",
+      "sha256": "3250971dc67847e2e6454dc910817a970390896797648362d82e5eae235f6937"
+    },
+    {
+      "source": "src/models/BOT_Origin.js",
+      "target": "resources/saola/web/app/game/models/BOT_Origin.js",
+      "sha256": "3d11511fbef9951a7f0c454727662bd223a42bb7956cc1af78d9599a8ea30ace"
+    },
+    {
+      "source": "src/models/C5-2025.js",
+      "target": "resources/saola/web/app/game/models/C5-2025.js",
+      "sha256": "603e07e4c9f59e090d8e1d0bff18a1e2021cce284988e4a62366a9702432c4c7"
+    },
+    {
+      "source": "src/models/C5-demo.js",
+      "target": "resources/saola/web/app/game/models/C5-demo.js",
+      "sha256": "2de58b6eb4e82b7a1105864820b3b39c69a1dfb433ef3aadc5894ad9c3707347"
+    },
+    {
+      "source": "src/models/OpportunityRegression.test.js",
+      "target": "resources/saola/web/app/game/models/OpportunityRegression.test.js",
+      "sha256": "b2a658db532016777c02df78867f71dc1094c7297379ffb082e3f41ebb69f762"
+    },
+    {
+      "source": "src/models/UCT_Independent.js",
+      "target": "resources/saola/web/app/game/models/UCT_Independent.js",
+      "sha256": "ffc210448f8d1f9427277f348895b0db805eb01142af340f3a788f1fe89f91d1"
+    },
+    {
+      "source": "src/models/UCT_Independent.test.js",
+      "target": "resources/saola/web/app/game/models/UCT_Independent.test.js",
+      "sha256": "2ab6fd26098898a8a911b54d2389d009ec1cf60b255cd742ac0f6460be7abfa5"
+    },
+    {
+      "source": "src/models/base-model.js",
+      "target": "resources/saola/web/app/game/models/base-model.js",
+      "sha256": "3fa486fdbd111d24a4ee926f1fb0ffb0e3d78a412b6a2f9aa0a25a5414b9d1ef"
+    },
+    {
+      "source": "src/models/tactics.test.js",
+      "target": "resources/saola/web/app/game/models/tactics.test.js",
+      "sha256": "946bb41cfec6d86e4bef7fea44c2b4c0ce012d862db7bf8cc71dc72bdf2793cf"
+    },
+    {
+      "source": "src/common/event-service.js",
+      "target": "resources/saola/web/app/game/common/event-service.js",
+      "sha256": "97e6eed080466b8b3144ee902fa55c694b88c1bedb250a4c7fec6fec1e85aad9"
+    },
+    {
+      "source": "src/common/utils.js",
+      "target": "resources/saola/web/app/game/common/utils.js",
+      "sha256": "77fa2cf591a7700689f9301f552e3333de73718e9f9740a8bc2fec161553673b"
+    }
+  ]
+}

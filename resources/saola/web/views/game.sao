@@ -1,0 +1,886 @@
+<script setup>
+import { GameSession } from '../app/GameSession.js';
+
+@state(vm = { cells: [], models: [], headline: 'Đang chuẩn bị bàn cờ…', instruction: '', first: 'Bạn', second: 'Máy', firstMark: 'X', secondMark: 'O', firstScore: 0, secondScore: 0, column: 15, line: 5, level: 1, moves: 0, last: '—', boardStyle: '', message: '', ended: false, waiting: false, canAct: false, canChoose: false, canExtend: false, canDraw: false, hasDrawOffer: false, autoPlay: false, soundOn: true, gameMode: 'ai' })
+@state(settings = false)
+@state(rules = false)
+@state(size = '2')
+@state(target = '5')
+@state(level = '1')
+@state(mode = 'ai')
+@state(opening = 'standard')
+@state(playerModel = 'BOT_Origin')
+@state(computerModel = 'BOT_Origin')
+@state(firstName = 'Người 1')
+@state(secondName = 'Người 2')
+
+let session;
+
+function started() {
+    if (!session) session = new GameSession(data => setVm(data));
+    session.resume();
+}
+function resumed() { if (session) session.resume(); }
+function paused() { if (session) session.pause(); }
+function stopped() { if (session) session.pause(); }
+function destroyed() { if (session) session.destroy(); }
+function pick(coord) { session.select(coord); }
+function choose(color) { session.openingChoice(color); }
+function reset() { session.reset(); }
+function toggleAuto() { session.toggleAuto(); }
+function hint() { session.hint(); }
+function resign() { session.resign(); }
+function offerDraw() { session.offerDraw(); }
+function respondDraw(accept) { session.respondDraw(accept); }
+function toggleSound() { session.toggleSound(); }
+function clearScores() { session.resetScores(); }
+function openSettings() {
+    const g = session.game;
+    setSize(String(g.size)); setTarget(String(g.winningLineLength)); setLevel(String(g.level));
+    setMode(g.gameMode); setOpening(g.openingRule);
+    setPlayerModel(g.playerAgentModel); setComputerModel(g.computerAgentModel);
+    setFirstName(g.player1Name); setSecondName(g.player2Name);
+    session.pause(); setSettings(true);
+}
+function closeSettings() { setSettings(false); session.resume(); }
+function applySettings(event) {
+    event.preventDefault();
+    session.configure({ size, winningLineLength: target, level, openingRule: opening, gameMode: mode, playerAgentModel: playerModel, computerAgentModel: computerModel, player1Name: firstName, player2Name: secondName });
+    setSettings(false); session.resume();
+}
+function normalizeOptions() {
+    if (size === '0' && target === '6') setTarget('5');
+    if (size !== '2' || target !== '5') setOpening('standard');
+}
+</script>
+
+<template>
+<div class="game-app">
+    <header class="topbar">
+        <a class="brand" href="#/" aria-label="Saola Gomoku, trang chủ"><span class="brand-symbol">✳</span><strong>saola gomoku<span class="brand-dot">.</span></strong></a>
+        <div class="top-right"><span class="built-with">ĐƯỢC XÂY DỰNG BẰNG SAOLA</span><button class="icon-button" @click(setRules(true)) aria-label="Xem luật chơi">?</button></div>
+    </header>
+    <main>
+        <section class="intro"><p class="eyebrow">MỘT NƯỚC ĐI. MỘT KHẢ NĂNG MỚI.</p><h1>Nghĩ một bước.<br><span>Đi xa hơn.</span></h1><p class="intro-copy">Một ván Caro, một khoảng nghỉ.<br>Thử chiến thuật của bạn với máy hoặc một người bạn.</p></section>
+        <div class="play-layout">
+            <section class="board-card" aria-label="Bàn cờ Caro">
+                <div class="board-top"><div><span class="live-dot"></span><strong>{{ vm.headline }}</strong></div><span class="board-size">{{ vm.column }} × {{ vm.column }}</span></div>
+                <p class="instruction" aria-live="polite">{{ vm.instruction }}</p>
+                <div class="board-scroll"><div id="board" class="board" style="{{ vm.boardStyle }}" role="group" aria-label="Chọn ô để đặt quân">
+                    
+@foreach(vm.cells as cell)
+
+                        
+@key(cell.coord)
+
+                        <button type="button" id="item-{{ cell.coord }}" data-coord="{{ cell.coord }}" class="{{ cell.group }}" aria-label="{{ cell.aria }}" @disabled(cell.disabled) @click(pick(cell.coord))>{{ cell.label }}</button>
+                    
+@endforeach
+
+                </div></div>
+                <div class="board-bottom"><span><i class="last-indicator"></i> Nước vừa đi: <strong>{{ vm.last }}</strong></span><span>{{ vm.moves }} nước đi</span></div>
+                
+@if(vm.canChoose)
+
+                <div class="opening-actions"><button class="red-choice" @click(choose('black'))>Chọn Đỏ · X</button><button class="blue-choice" @click(choose('white'))>Chọn Xanh · O</button>
+@if(vm.canExtend)
+<button @click(choose('extend'))>Đặt thêm 2 quân</button>
+@endif
+</div>
+                
+@endif
+
+                
+@if(vm.hasDrawOffer)
+
+                <div class="opening-actions"><span>Bên còn lại có đồng ý hòa?</span><button @click(respondDraw(true))>Đồng ý</button><button @click(respondDraw(false))>Tiếp tục chơi</button></div>
+                
+@endif
+
+                
+@if(vm.message)
+<div class="message" role="status">{{ vm.message }}</div>
+@endif
+
+                
+@if(vm.ended)
+<button class="end-action" @click(reset())>Chơi ván tiếp theo →</button>
+@endif
+
+            </section>
+            <aside class="sidebar">
+                <section class="panel score-panel"><div class="panel-title"><h2>Ván đấu của bạn</h2><span class="pill">
+@if(vm.gameMode === 'ai')
+VỚI MÁY
+@else
+HAI NGƯỜI
+@endif
+</span></div><div class="scores"><div><span class="player-mark red">{{ vm.firstMark }}</span><strong>{{ vm.first }}</strong><small>{{ vm.firstScore }} ván thắng</small></div><span class="versus">VS</span><div><span class="player-mark blue">{{ vm.secondMark }}</span><strong>{{ vm.second }}</strong><small>{{ vm.secondScore }} ván thắng</small></div></div><div class="game-spec"><span>{{ vm.line }} quân liên tiếp</span><span>Cấp độ {{ vm.level }}</span></div></section>
+                <section class="panel actions-panel"><button id="new-game" class="primary" @click(openSettings())><span>＋</span> Tạo màn chơi mới</button><div class="action-grid"><button id="hint" @disabled(!vm.canAct) @click(hint())><span>✧</span> Gợi ý</button><button id="reset" @click(reset())><span>↻</span> Làm mới</button></div>
+@if(vm.gameMode === 'ai')
+<button id="auto" class="auto-button" @click(toggleAuto())><span class="auto-icon">▶</span>
+@if(vm.autoPlay)
+Dừng tự động
+@else
+Xem hai bot tự chơi
+@endif
+<span class="toggle" @class(['on' => vm.autoPlay])><i></i></span></button>
+@endif
+<div class="quiet-actions"><button @disabled(!vm.canAct) @click(resign())>Đầu hàng</button><span>·</span><button @disabled(!vm.canDraw) @click(offerDraw())>Đề nghị hòa</button></div></section>
+                <section class="rule-note"><span class="note-icon">↗</span><div><h3>Đủ quân. Đúng thời điểm.</h3><p>Tạo một đoạn {{ vm.line }} quân liên tiếp. Hai ô sát đầu đoạn không được có quân đối thủ.</p><button class="text-link" @click(setRules(true))>Hiểu thêm về luật chơi →</button></div></section>
+                <div class="preferences"><button id="sound" @click(toggleSound())>
+@if(vm.soundOn)
+♫ Âm thanh bật
+@else
+♪ Âm thanh tắt
+@endif
+</button><button @click(clearScores())>Xóa thống kê</button></div>
+            </aside>
+        </div>
+        <footer><span>CHẬM LẠI MỘT CHÚT. CHƠI HAY HƠN MỘT CHÚT.</span><span>Saola Gomoku · Saola</span></footer>
+    </main>
+    
+@if(settings)
+
+    <div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title"><div class="modal-heading"><div><p class="eyebrow">BẮT ĐẦU MỘT KHẢ NĂNG MỚI</p><h2 id="settings-title">Tạo màn chơi</h2></div><button class="icon-button" aria-label="Đóng cấu hình" @click(closeSettings())>×</button></div><form id="settings-form" @submit(applySettings(event))>
+        <div class="form-grid"><label>Chế độ<select name="gameMode" @bind(mode)><option value="ai">Bạn đấu với máy</option><option value="twoPlayer">Hai người cùng chơi</option></select></label><label>Độ khó<select name="level" @bind(level)><option value="1">1 · Dễ</option><option value="2">2 · Vừa</option><option value="3">3 · Khó</option></select></label><label>Kích thước bàn<select name="size" @bind(size) @change(normalizeOptions())><option value="0">5 × 5</option><option value="1">10 × 10</option><option value="2">15 × 15</option><option value="3">20 × 20</option><option value="4">25 × 25</option><option value="5">30 × 30</option></select></label><label>Số quân để thắng<select name="target" @bind(target) @change(normalizeOptions())><option value="4">4 quân</option><option value="5">5 quân</option>
+@if(size !== '0')
+<option value="6">6 quân</option>
+@endif
+</select></label></div>
+        <label>Khai cuộc<select name="opening" @bind(opening)><option value="standard">Bình thường · X đi trước</option>
+@if(size === '2' && target === '5')
+<option value="swap2">Swap2 · Chọn màu sau 3 quân</option>
+@endif
+</select></label>
+        
+@if(mode === 'twoPlayer')
+<div class="form-grid"><label>Tên người 1<input name="player1Name" maxlength="40" @bind(firstName)></label><label>Tên người 2<input name="player2Name" maxlength="40" @bind(secondName)></label></div>
+@endif
+
+        <div class="form-grid"><label>Bot gợi ý / bên thứ nhất<select name="playerModel" @bind(playerModel)>
+@foreach(vm.models as model)
+<option value="{{ model.name }}">{{ model.name }}</option>
+@endforeach
+</select></label><label>Bot đối thủ<select name="computerModel" @bind(computerModel)>
+@foreach(vm.models as model)
+<option value="{{ model.name }}">{{ model.name }}</option>
+@endforeach
+</select></label></div>
+        <p class="form-note">Bắt đầu sẽ tạo một ván mới. Swap2 chỉ dùng với bàn 15 × 15, thắng 5 quân. Mọi cấu hình dùng luật Caro chặn một đầu.</p><div class="modal-actions"><button type="button" @click(closeSettings())>Hủy</button><button id="start-game" class="primary" type="submit">Bắt đầu ván đấu →</button></div>
+    </form></section></div>
+    
+@endif
+
+    
+@if(rules)
+
+    <div class="modal-backdrop"><section class="modal rules-modal" role="dialog" aria-modal="true" aria-labelledby="rules-title"><div class="modal-heading"><h2 id="rules-title">Luật chơi Saola Gomoku</h2><button class="icon-button" aria-label="Đóng luật chơi" @click(setRules(false))>×</button></div><p>Đặt quân luân phiên. Một đoạn N quân cùng màu theo hàng, cột hoặc đường chéo thắng nếu hai ô sát đầu đoạn không có quân đối thủ.</p><div class="rule-example"><span class="red">· X X X X X ·</span><strong>Thắng</strong></div><div class="rule-example"><span><b class="blue">O</b> <b class="red">X X X X X</b> ·</span><strong>Chưa thắng</strong></div><p>Mép bàn không chặn thắng. Chuỗi dài hơn N vẫn được xét từng đoạn N bên trong; quân cùng màu ngoài đoạn không chặn thắng.</p><h3>Khai cuộc Swap2</h3><p>Người đầu đặt X → O → X. Người thứ hai chọn màu hoặc đặt thêm O → X để người đầu chọn màu. Người sở hữu O đánh tiếp.</p><p>Bàn đầy không có người thắng thì hòa. Có thể đầu hàng hoặc đề nghị hòa sau khai cuộc. Máy xét đề nghị hòa theo điểm tiềm năng của hai bên.</p><button class="primary" @click(setRules(false))>Đã hiểu, chơi thôi →</button></section></div>
+    
+@endif
+
+</div>
+</template>
+
+<style>
+* {
+    box-sizing:border-box
+}
+body {
+    margin:0;
+    background:#f7f8f2;
+    color:#253c31;
+    font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+button,input,select {
+    font:inherit
+}
+button {
+    cursor:pointer
+}
+button:disabled {
+    cursor:default;
+    opacity:.45
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
+    outline:3px solid #9cb561;
+    outline-offset:3px
+}
+button {
+    border:1px solid #dce2d7;
+    background:#fff;
+    border-radius:10px;
+    color:#314c3e;
+    padding:12px 16px
+}
+button:hover:not(:disabled) {
+    background:#eef3e7
+}
+.topbar {
+    max-width:1256px;
+    padding:28px 48px;
+    margin:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid #e0e6db
+}
+.brand {
+    text-decoration:none;
+    color:#253c31;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:22px;
+    letter-spacing:-1px
+}
+.brand-symbol {
+    font-size:35px;
+    color:#537c43
+}
+.brand-dot {
+    color:#789b59
+}
+.top-right {
+    display:flex;
+    align-items:center;
+    gap:23px
+}
+.built-with {
+    font-size:10px;
+    letter-spacing:1.6px;
+    color:#84917d
+}
+.icon-button {
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    padding:0;
+    display:grid;
+    place-items:center
+}
+main {
+    max-width:1160px;
+    margin:auto;
+    padding:45px 0 0
+}
+.intro {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    position:relative;
+    margin-bottom:32px
+}
+.eyebrow {
+    font-size:10px;
+    letter-spacing:2px;
+    font-weight:700;
+    color:#76876b;
+    margin:0 0 16px
+}
+.intro .eyebrow {
+    grid-column:1/-1
+}
+h1 {
+    font-size:48px;
+    line-height:1.12;
+    letter-spacing:-2px;
+    margin:0;
+    font-weight:650
+}
+h1 span {
+    color:#829875
+}
+.intro-copy {
+    align-self:end;
+    justify-self:end;
+    margin:0 5px 5px 0;
+    color:#809079;
+    font-size:14px;
+    line-height:1.8
+}
+.play-layout {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 318px;
+    gap:28px;
+    align-items:start
+}
+.board-card {
+    background:#fff;
+    border:1px solid #dfe6da;
+    border-radius:16px;
+    padding:23px 27px 17px;
+    box-shadow:0 6px 25px #23352004
+}
+.board-top {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:14px
+}
+.board-top>div {
+    display:flex;
+    gap:9px;
+    align-items:center
+}
+.live-dot {
+    width:7px;
+    height:7px;
+    background:#709555;
+    border-radius:50%
+}
+.board-size {
+    font-size:11px;
+    letter-spacing:1px;
+    border:1px solid #e6eadf;
+    padding:5px 8px;
+    border-radius:6px;
+    color:#8b9981
+}
+.instruction {
+    font-size:12px;
+    margin:8px 0 20px;
+    color:#86937f;
+    min-height:18px
+}
+.board {
+    display:grid;
+    border:1px solid #d3dcc7;
+    background:#edf1e7;
+    padding:1px;
+    gap:1px;
+    border-radius:3px;
+    width:100%;
+    aspect-ratio:1
+}
+.cell {
+    min-width:0;
+    min-height:0;
+    aspect-ratio:1;
+    border:0;
+    border-radius:0;
+    padding:0;
+    background:#fbfcf8;
+    font-weight:600;
+    font-size:clamp(10px,1.6vw,23px);
+    display:grid;
+    place-items:center;
+    position:relative
+}
+.cell:disabled {
+    opacity:1
+}
+.cell:hover:not(:disabled) {
+    background:#e5eddd
+}
+.cell.x,.red {
+    color:#c65b4c
+}
+.cell.o,.blue {
+    color:#5b88ab
+}
+.cell.last:after {
+    content:"";
+    position:absolute;
+    inset:3px;
+    border:1px solid #b6c8a0;
+    border-radius:3px
+}
+.cell.win {
+    background:#dcecc8
+}
+.cell.hint {
+    background:#d0e7b4;
+    box-shadow:inset 0 0 0 2px #8baa68
+}
+.board-bottom {
+    display:flex;
+    justify-content:space-between;
+    margin-top:16px;
+    color:#92a087;
+    font-size:11px
+}
+.board-bottom>span:first-child {
+    display:flex;
+    gap:5px;
+    align-items:center
+}
+.last-indicator {
+    width:9px;
+    height:9px;
+    border:1px solid #a8bf8f;
+    display:inline-block;
+    border-radius:2px;
+    margin-right:2px
+}
+.sidebar {
+    display:grid;
+    gap:18px
+}
+.panel {
+    background:#fff;
+    border:1px solid #dfe6da;
+    border-radius:14px;
+    padding:21px
+}
+.panel-title {
+    display:flex;
+    justify-content:space-between;
+    align-items:center
+}
+h2 {
+    margin:0;
+    font-size:15px;
+    letter-spacing:-.3px
+}
+.pill {
+    color:#8a9a7b;
+    background:#f1f5eb;
+    font-size:9px;
+    letter-spacing:1px;
+    padding:6px 8px;
+    border-radius:5px
+}
+.scores {
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+    margin:22px 0
+}
+.scores>div {
+    display:flex;
+    align-items:center;
+    flex-direction:column;
+    gap:5px;
+    max-width:100px;
+    overflow-wrap:anywhere
+}
+.player-mark {
+    height:45px;
+    width:45px;
+    border-radius:13px;
+    display:grid;
+    place-items:center;
+    background:#faf2ed;
+    font-size:26px;
+    margin-bottom:5px
+}
+.player-mark.blue {
+    background:#eef4f7
+}
+.scores strong {
+    font-size:13px
+}
+.scores small {
+    font-size:11px;
+    color:#919d87
+}
+.versus {
+    font-size:10px;
+    color:#acb6a4;
+    letter-spacing:1px
+}
+.game-spec {
+    display:flex;
+    justify-content:space-between;
+    padding-top:15px;
+    border-top:1px solid #eef1e9;
+    font-size:11px;
+    color:#8b9880
+}
+.actions-panel {
+    padding:17px
+}
+.primary {
+    background:#426548;
+    border-color:#426548;
+    color:#fff;
+    font-size:13px;
+    font-weight:600
+}
+.primary:hover:not(:disabled) {
+    background:#35553a
+}
+.actions-panel>.primary {
+    width:100%;
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    align-items:center
+}
+.primary>span {
+    font-size:20px;
+    font-weight:400
+}
+.action-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin:12px 0
+}
+.action-grid button {
+    font-size:12px;
+    padding:12px 5px;
+    display:flex;
+    gap:9px;
+    justify-content:center
+}
+.action-grid span {
+    font-size:16px;
+    color:#8b9e75
+}
+.auto-button {
+    width:100%;
+    background:#f5f7ef;
+    border-color:#e6ebdc;
+    font-size:11px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:13px 10px
+}
+.auto-icon {
+    font-size:9px;
+    color:#8c9f77
+}
+.toggle {
+    margin-left:auto;
+    background:#d5ddcb;
+    width:26px;
+    height:15px;
+    border-radius:10px;
+    padding:2px;
+    display:flex
+}
+.toggle i {
+    height:11px;
+    width:11px;
+    border-radius:50%;
+    background:#fff
+}
+.toggle.on {
+    background:#64894e;
+    justify-content:flex-end
+}
+.quiet-actions {
+    display:flex;
+    gap:7px;
+    justify-content:center;
+    margin-top:16px;
+    color:#bbc4b4
+}
+.quiet-actions button {
+    border:0;
+    background:none;
+    font-size:10px;
+    color:#9aab8d;
+    padding:2px
+}
+.rule-note {
+    border:1px solid #e2e9d4;
+    background:#f0f4e6;
+    border-radius:12px;
+    padding:19px;
+    display:flex;
+    gap:12px
+}
+.note-icon {
+    color:#81996a;
+    font-size:20px
+}
+h3 {
+    font-size:12px;
+    margin:1px 0 7px
+}
+.rule-note p {
+    font-size:11px;
+    line-height:1.85;
+    color:#89977b;
+    margin:0
+}
+.text-link {
+    border:0;
+    background:transparent;
+    padding:13px 0 0;
+    font-size:10px;
+    color:#68814e
+}
+.preferences {
+    display:flex;
+    justify-content:space-between
+}
+.preferences button {
+    padding:2px;
+    border:0;
+    background:none;
+    color:#91a184;
+    font-size:10px
+}
+footer {
+    display:flex;
+    justify-content:space-between;
+    border-top:1px solid #e1e6da;
+    margin-top:35px;
+    padding:21px 0 30px;
+    color:#9aa98d;
+    font-size:9px;
+    letter-spacing:1.1px
+}
+.opening-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-top:16px;
+    font-size:12px
+}
+.opening-actions button {
+    font-size:12px
+}
+.red-choice {
+    color:#c65b4c
+}
+.blue-choice {
+    color:#5b88ab
+}
+.message {
+    margin-top:15px;
+    background:#f0f5e8;
+    padding:12px;
+    border-radius:8px;
+    font-size:12px
+}
+.end-action {
+    margin-top:15px;
+    width:100%;
+    background:#e6efd9;
+    border-color:#c8dabb
+}
+.modal-backdrop {
+    position:fixed;
+    inset:0;
+    background:#142a2066;
+    backdrop-filter:blur(4px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px
+}
+.modal {
+    background:#fff;
+    border:1px solid #dfe6da;
+    border-radius:18px;
+    padding:27px;
+    width:520px;
+    max-width:100%;
+    max-height:90vh;
+    overflow:auto;
+    box-shadow:0 25px 100px #19382233
+}
+.modal-heading {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px
+}
+.modal-heading h2 {
+    font-size:24px
+}
+.modal-heading .eyebrow {
+    font-size:9px;
+    margin-bottom:8px
+}
+.form-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px
+}
+form label {
+    display:grid;
+    gap:7px;
+    font-size:12px;
+    font-weight:550;
+    margin-bottom:16px
+}
+select,input {
+    border:1px solid #dae2d3;
+    background:#fafcf7;
+    border-radius:8px;
+    padding:11px;
+    width:100%;
+    min-width:0;
+    color:#3a5542;
+    font-size:12px
+}
+.form-note {
+    font-size:11px;
+    color:#8a9780;
+    line-height:1.8;
+    margin:0 0 20px
+}
+.modal-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    border-top:1px solid #e8ecdf;
+    padding-top:20px
+}
+.modal-actions button {
+    font-size:12px
+}
+.rules-modal p {
+    font-size:13px;
+    line-height:1.85;
+    color:#76866d
+}
+.rules-modal h3 {
+    font-size:15px;
+    margin-top:22px
+}
+.rule-example {
+    display:flex;
+    justify-content:space-between;
+    padding:14px;
+    background:#f4f7ef;
+    border-radius:8px;
+    margin:10px 0;
+    font-size:13px
+}
+.rules-modal>.primary {
+    width:100%;
+    margin-top:14px
+}
+@media(min-width:1400px) {
+    main {
+        max-width:1110px
+    }
+    .topbar {
+        max-width:1206px
+    }
+}
+@media(max-width:1200px) {
+    main {
+        padding:35px 30px 0
+    }
+    .topbar {
+        padding:23px 30px
+    }
+    .play-layout {
+        grid-template-columns:minmax(0,1fr) 285px;
+        gap:20px
+    }
+    .board-card {
+        padding:19px
+    }
+    .cell {
+        font-size:clamp(9px,1.7vw,21px)
+    }
+}
+@media(max-width:760px) {
+    .topbar {
+        padding:18px 20px
+    }
+    .built-with {
+        display:none
+    }
+    main {
+        padding:29px 18px 0
+    }
+    .intro {
+        grid-template-columns:1fr;
+        margin-bottom:23px
+    }
+    h1 {
+        font-size:37px
+    }
+    .intro-copy {
+        justify-self:start;
+        margin-top:15px;
+        font-size:12px
+    }
+    .eyebrow {
+        font-size:9px
+    }
+    .play-layout {
+        grid-template-columns:1fr;
+        gap:18px
+    }
+    .board-card {
+        padding:16px
+    }
+    .board-top {
+        font-size:13px
+    }
+    .instruction {
+        font-size:11px
+    }
+    .cell {
+        font-size:clamp(8px,3.1vw,22px)
+    }
+    .sidebar {
+        grid-template-columns:1fr 1fr;
+        gap:12px
+    }
+    .score-panel {
+        padding:17px 13px
+    }
+    .panel-title {
+        flex-wrap:wrap;
+        gap:9px
+    }
+    .actions-panel {
+        padding:12px
+    }
+    .rule-note,.preferences {
+        grid-column:1/-1
+    }
+    .rule-note {
+        padding:16px
+    }
+    .scores {
+        margin:18px 0
+    }
+    .quiet-actions {
+        gap:3px
+    }
+    .quiet-actions button {
+        font-size:9px
+    }
+    .actions-panel>.primary {
+        font-size:11px
+    }
+    .auto-button {
+        font-size:9px
+    }
+    .action-grid button {
+        font-size:10px
+    }
+    .game-spec {
+        font-size:9px
+    }
+    footer {
+        margin-top:25px;
+        gap:14px;
+        font-size:8px;
+        line-height:1.8
+    }
+    .modal {
+        padding:21px
+    }
+    .modal-heading h2 {
+        font-size:21px
+    }
+    .form-grid {
+        gap:11px
+    }
+}
+@media(prefers-reduced-motion:no-preference) {
+    .hint {
+        animation:hint-pulse 1s ease-in-out infinite
+    }
+    @keyframes hint-pulse {
+        50% {
+            background:#e4f1d1
+        }
+    }
+}
+</style>

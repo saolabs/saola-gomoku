@@ -1,0 +1,54 @@
+{
+  "paths": {
+    "resources": "resources/saola",
+    "saoView": "resources/saola",
+    "bladeView": ".generated/blade",
+    "compiled": ".generated/js",
+    "public": ".generated/public"
+  },
+  "contexts": {
+    "web": {
+      "name": "Saola Gomoku",
+      "app": [
+        "web/app"
+      ],
+      "views": {
+        "web": "web/views"
+      },
+      "blade": {
+        "web": "web"
+      },
+      "compiled": {
+        "views": "web/views",
+        "app": "web/app",
+        "registry": "web/registry.js"
+      },
+      "router": {
+        "mode": "hash",
+        "routes": [
+          {
+            "path": "/",
+            "component": "web.game"
+          }
+        ]
+      },
+      "dist": {
+        "html": {
+          "title": "Saola Gomoku \u00b7 Caro without React",
+          "lang": "vi",
+          "containerId": "saola-gomoku-app"
+        },
+        "css": false,
+        "assets": [
+          {
+            "from": "public/sounds",
+            "to": "sounds"
+          }
+        ]
+      }
+    }
+  },
+  "dist": {
+    "defaultContext": "web"
+  }
+}

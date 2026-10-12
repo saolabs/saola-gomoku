@@ -1,0 +1,35 @@
+{
+  "name": "saola-gomoku",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm run verify:engine && sao-dist web",
+    "dev": "node scripts/dev.mjs",
+    "preview": "vite --config vite.config.js",
+    "test": "vitest run",
+    "test:engine": "vitest run resources/saola/web/app/game",
+    "test:ui": "node scripts/check-ui.mjs",
+    "verify:engine": "node scripts/verify-engine.mjs"
+  },
+  "dependencies": {
+    "@saolabs/client": "1.0.2"
+  },
+  "devDependencies": {
+    "chokidar": "^4.0.3",
+    "@saolabs/builder": "1.0.2",
+    "vite": "^6.4.0",
+    "vitest": "^4.1.11",
+    "jsdom": "^25.0.0",
+    "playwright": "^1.62.1"
+  },
+  "description": "A real-world Gomoku / Caro application built with Saola .sao components, without React",
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saolabs/saola-gomoku.git"
+  }
+}
