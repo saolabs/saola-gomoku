@@ -60,13 +60,16 @@ The engine, common helpers, four bots and nine engine test suites were imported 
 ```sh
 npm run verify:engine     # Check all imported file hashes
 npm test                 # Engine regression tests + UI adapter tests
+npm run test:smoke       # Deployment checks, excluding two exhaustive matrices
 npm run test:engine      # Original engine regression tests only
 npm run test:ui          # Browser integration checks (serves the build if needed)
 ```
 
 For browser tests, install Playwright Chromium with `npx playwright install chromium`. To use an installed Chrome instead: `PLAYWRIGHT_CHANNEL=chrome npm run test:ui`.
 
-The test harness supplies Jest-compatible spies to Vitest and an isolated localStorage. The full-board tests keep their original assertions, while this harness raises their explicit 120-second limits to 300 seconds for slower jsdom environments. The 30×30 seeded match can take several minutes. The original engine's unused resize-image utility causes a Vite const-reassignment warning; its source is kept unchanged for provenance.
+The test harness supplies Jest-compatible spies to Vitest and an isolated localStorage. The full-board tests keep their original assertions, while this harness raises their explicit 120-second limits to 300 seconds locally. Set `SAOLA_TEST_TIMEOUT_MS` to increase the budget on slower machines. A 30×30 seeded match took about 8 minutes on a GitHub runner, compared with about 2.5 minutes locally; this is a CPU-bound simulation, not an assertion failure. The original engine's unused resize-image utility causes a Vite const-reassignment warning; its source is kept unchanged for provenance.
+
+Deployment CI runs the rules, tactical, UCT, Swap2 and adapter suites, plus browser integration checks. The two exhaustive `FullGameOracle` / `CustomGame` matrices remain part of `npm test`; run them through the separate **Full engine regression** workflow when changing the engine, or locally before an algorithm release. That manual workflow gives each test up to 20 minutes and the job up to 90 minutes. Engine imports are unchanged in this migration and protected by hashes on every build.
 
 ## Static deployment
 

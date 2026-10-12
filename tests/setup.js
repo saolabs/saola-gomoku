@@ -1,13 +1,14 @@
 import { vi } from 'vitest';
 // Upstream tests are kept verbatim; provide their Jest mock API in Vitest.
 globalThis.jest = vi;
-// Upstream full-board matches set a 120s timeout explicitly. Allow 5 minutes
-// in this runner: jsdom/CPU speed differs from Jest, with identical assertions.
+// Preserve upstream assertions but allow slower CPU environments a larger
+// execution budget. The manual full-regression workflow provides 20 minutes.
+const minimumEachTimeout = Number(process.env.SAOLA_TEST_TIMEOUT_MS) || 300000;
 const upstreamEach = test.each;
 test.each = (...table) => {
   const parameterized = upstreamEach.call(test, ...table);
   return (name, fn, timeout) => parameterized(name, fn,
-    typeof timeout === 'number' ? Math.max(timeout, 300000) : timeout);
+    typeof timeout === 'number' ? Math.max(timeout, minimumEachTimeout) : timeout);
 };
 // Node 25 exposes an incomplete localStorage without --localstorage-file.
 // Use an isolated browser-compatible store for each worker.

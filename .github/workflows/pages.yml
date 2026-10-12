@@ -29,7 +29,10 @@ jobs:
           tools: composer:v2
       - run: composer install --no-interaction --no-progress
       - run: npm ci
-      - run: npm test
+      # The two exhaustive board-size/complete-match matrices are available
+      # in full-regression.yml; deployment still tests rules, tactics, UCT,
+      # Swap2, lifecycle and the compiled browser interface on every push.
+      - run: npm run test:smoke
       - run: npm run build
         env:
           SAOLA_DIST_BASE_URL: /saola-gomoku/

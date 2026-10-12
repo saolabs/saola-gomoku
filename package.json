@@ -8,6 +8,7 @@
     "dev": "node scripts/dev.mjs",
     "preview": "vite --config vite.config.js",
     "test": "vitest run",
+    "test:smoke": "vitest run --exclude '**/FullGameOracle.test.js' --exclude '**/CustomGame.test.js'",
     "test:engine": "vitest run resources/saola/web/app/game",
     "test:ui": "node scripts/check-ui.mjs",
     "verify:engine": "node scripts/verify-engine.mjs"

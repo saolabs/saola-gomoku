@@ -33,6 +33,8 @@ Browser checks exercise the compiled `.sao` output, not a mock interface: two-pl
 
 The engine regression suite includes an independent numeric referee, endpoint/longer-run cases, bot tactical positions, complete seeded games and independent UCT checks. Test execution budgets differ from the original Jest runner; assertions and game source stay identical.
 
+The first GitHub deployment run exceeded its 30-minute job budget in the exhaustive matrices. Its 30×30/N=5 match completed in about 484 seconds, exceeding the initial 300-second per-test limit. Deployment now runs the remaining regression suites and browser checks; the full matrices have a separate manually triggered workflow with a larger budget. The local engine verification covered all 245 upstream cases, including rerunning the timed match successfully, and 12 additional adapter cases. No test assertions were removed or weakened.
+
 ## Limits
 
 This is local play on one device. It does not claim international Gomoku/Renju rules, online identity, ratings or secure multiplayer. No in-progress game persistence is added. Large synchronous AI searches can occupy the browser main thread; moving those searches to a worker would be a separate performance change.
