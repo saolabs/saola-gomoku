@@ -4,6 +4,10 @@ A playable Gomoku / Vietnamese Caro application built with **Saola `.sao` compon
 
 This repository is a practical Saola case study: migrate a real React game while preserving its existing JavaScript game engine and AI algorithms.
 
+[Play the demo](https://saolabs.github.io/saola-gomoku/) · [Build and deployment](https://github.com/saolabs/saola-gomoku/actions/workflows/pages.yml) · [Mobile preview](docs/images/mobile.png)
+
+![Saola Gomoku running with its original Caro engine](docs/images/desktop.png)
+
 ## Run locally
 
 Requires Node.js 22+, npm 10+, PHP 8.3+ and Composer. PHP is used at build time by the Saola compiler. The deployed game is a static SPA and needs no PHP server, API, database or account.
